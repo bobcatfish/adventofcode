@@ -1,8 +1,9 @@
 # Advent of Code
 
-My solutions for [adventofcode.com/](http://adventofcode.com/)!
+My solutions for [adventofcode.com](http://adventofcode.com/)!
 
 * [2016 All Python all the time](./2016)
+* [2017 Go Go Go](./2017)
 
 ```
 
