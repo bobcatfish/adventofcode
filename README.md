@@ -4,6 +4,7 @@ My solutions for [adventofcode.com/](http://adventofcode.com/)!
 
 * [2016 All Python all the time](./2016)
 
+```
 
            *             ,
                        _/^\_
@@ -29,5 +30,6 @@ My solutions for [adventofcode.com/](http://adventofcode.com/)!
          '`         \)_`"""""`
                  .--' ')
                o(  )_-\
+```
 
 (Tree from chris.com/ascii/index.php?art=holiday/christmas/trees)
