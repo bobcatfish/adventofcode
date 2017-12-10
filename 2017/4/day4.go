@@ -9,27 +9,6 @@ import (
 	"strings"
 )
 
-type sortRunes []rune
-
-func (s sortRunes) Less(i, j int) bool {
-	return s[i] < s[j]
-}
-
-func (s sortRunes) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func (s sortRunes) Len() int {
-	return len(s)
-}
-
-// Copied from https://stackoverflow.com/questions/22688651/golang-how-to-sort-string-or-byte
-func sortString(s string) string {
-	r := []rune(s)
-	sort.Sort(sortRunes(r))
-	return string(r)
-}
-
 func main() {
 	file, err := os.Open("input.txt")
 	if err != nil {
@@ -52,7 +31,12 @@ func main() {
 		words := make(map[string]bool)
 		valid := true
 		for _, w := range strings.Fields(row) {
-			s := sortString(w)
+
+			// Thanks @BlueMonday!
+			r := []rune(w)
+			sort.Slice(r, func(i, j int) bool { return r[i] < r[j] })
+			s := string(r)
+
 			if _, present := words[s]; present {
 				valid = false
 				break
