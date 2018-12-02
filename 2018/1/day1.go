@@ -20,15 +20,6 @@ func getNum(s string) (int, error) {
 	return 0 - i, nil
 }
 
-func seen(seenFreq []int, sum int) bool {
-	for _, v := range seenFreq {
-		if v == sum {
-			return true
-		}
-	}
-	return false
-}
-
 func main() {
 	file, err := os.Open("input.txt")
 	if err != nil {
@@ -42,7 +33,7 @@ func main() {
 		vals = append(vals, scanner.Text())
 	}
 
-	seenFreq := []int{}
+	seenFreq := map[int]bool{}
 	sum := 0
 	for {
 		for _, v := range vals {
@@ -51,11 +42,11 @@ func main() {
 				log.Fatalf("Error getting num: %s", err)
 			}
 			sum += n
-			if seen(seenFreq, sum) {
+			if _, ok := seenFreq[sum]; ok {
 				fmt.Println("Repeated", sum)
 				os.Exit(0)
 			}
-			seenFreq = append(seenFreq, sum)
+			seenFreq[sum] = true
 		}
 		fmt.Printf("Freqency: %d\n", sum)
 	}
