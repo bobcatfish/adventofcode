@@ -32,8 +32,6 @@ type foundIntersection struct {
 	dist         int
 }
 
-var tombstone = foundIntersection{dist: -1}
-
 func getAdj(p point) []point {
 	return []point{
 		// above
@@ -49,20 +47,22 @@ func getAdj(p point) []point {
 
 }
 
-func stepOut(start *startingPoint, dist int, adj map[point]bool, found map[point]foundIntersection) {
+func stepOut(start *startingPoint, dist int, adj map[point]bool, found map[point]*foundIntersection) {
 	start.adjByDist[dist] = map[point]bool{}
 	for p := range adj {
 		for _, adjP := range getAdj(p) {
 			start.adjByDist[dist][adjP] = true
 			prev, ok := found[adjP]
 			if ok {
-				if prev.dist != tombstone.dist && prev.startPoint != start.p && prev.dist >= dist {
-					*prev.startingArea--
-					found[adjP] = tombstone
+				if prev.startPoint != start.p && prev.dist >= dist {
+					if prev.startingArea != nil {
+						*prev.startingArea--
+						prev.startingArea = nil
+					}
 				}
 			} else {
 				start.area++
-				found[adjP] = foundIntersection{
+				found[adjP] = &foundIntersection{
 					startPoint:   start.p,
 					startingArea: &start.area,
 					dist:         dist,
@@ -115,12 +115,12 @@ func main() {
 	// The keys here are points that are adjacent to other points.
 	// The values are the maps from that starting point that is adjacent,
 	// so that if we find another adjacent point, we can remove them
-	found := map[point]foundIntersection{}
+	found := map[point]*foundIntersection{}
 
 	// seed the known points in
 	for i := range starts {
 		start := starts[i]
-		found[start.p] = foundIntersection{
+		found[start.p] = &foundIntersection{
 			startPoint:   start.p,
 			startingArea: &start.area,
 			dist:         0,
