@@ -24,16 +24,15 @@ type startingPoint struct {
 	p         point
 }
 
-// adjCount can be used to updtae a startingPoint if another
-// adj point is found at the same location
-type adjCount struct {
-	adj          map[point]bool
+// foundIntersection keeps track of points that have been found at a distance
+// from a startingPoint.
+type foundIntersection struct {
 	startingArea *int
 	startPoint   point
 	dist         int
 }
 
-var tombstone = adjCount{dist: -1}
+var tombstone = foundIntersection{dist: -1}
 
 func getAdj(p point) []point {
 	return []point{
@@ -50,7 +49,7 @@ func getAdj(p point) []point {
 
 }
 
-func stepOut(start *startingPoint, dist int, adj map[point]bool, found map[point]adjCount) {
+func stepOut(start *startingPoint, dist int, adj map[point]bool, found map[point]foundIntersection) {
 	start.adjByDist[dist] = map[point]bool{}
 	for p := range adj {
 		for _, adjP := range getAdj(p) {
@@ -63,9 +62,8 @@ func stepOut(start *startingPoint, dist int, adj map[point]bool, found map[point
 				}
 			} else {
 				start.area++
-				found[adjP] = adjCount{
+				found[adjP] = foundIntersection{
 					startPoint:   start.p,
-					adj:          start.adjByDist[dist],
 					startingArea: &start.area,
 					dist:         dist,
 				}
@@ -117,14 +115,13 @@ func main() {
 	// The keys here are points that are adjacent to other points.
 	// The values are the maps from that starting point that is adjacent,
 	// so that if we find another adjacent point, we can remove them
-	found := map[point]adjCount{}
+	found := map[point]foundIntersection{}
 
 	// seed the known points in
 	for i := range starts {
 		start := starts[i]
-		found[start.p] = adjCount{
+		found[start.p] = foundIntersection{
 			startPoint:   start.p,
-			adj:          start.adjByDist[0],
 			startingArea: &start.area,
 			dist:         0,
 		}
@@ -149,7 +146,7 @@ func main() {
 			}
 			if len(candidates) > 0 {
 				sort.Ints(candidates)
-				fmt.Println(candidates[len(candidates)-1])
+				fmt.Println("potential part 1 answer:", candidates[len(candidates)-1])
 			}
 		}
 
