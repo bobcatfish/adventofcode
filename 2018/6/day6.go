@@ -22,8 +22,6 @@ type startingPoint struct {
 	adjByDist map[int]map[point]bool
 	area      int
 	p         point
-
-	id rune
 }
 
 // adjCount can be used to updtae a startingPoint if another
@@ -32,12 +30,10 @@ type adjCount struct {
 	adj          map[point]bool
 	startingArea *int
 	startPoint   point
-	id           rune
-	// shouldnt matter cuz each new one we encounter is either less close or the same
-	dist int
+	dist         int
 }
 
-var tombstone = adjCount{dist: -1, id: '.'}
+var tombstone = adjCount{dist: -1}
 
 func getAdj(p point) []point {
 	return []point{
@@ -72,7 +68,6 @@ func stepOut(start *startingPoint, dist int, adj map[point]bool, found map[point
 					adj:          start.adjByDist[dist],
 					startingArea: &start.area,
 					dist:         dist,
-					id:           start.id,
 				}
 			}
 		}
@@ -93,7 +88,7 @@ func main() {
 	}
 
 	starts := []startingPoint{}
-	for i, v := range vals {
+	for _, v := range vals {
 		vs := strings.Split(v, ", ")
 		x, err := strconv.Atoi(vs[0])
 		if err != nil {
@@ -115,7 +110,6 @@ func main() {
 				},
 			},
 			area: 1,
-			id:   rune('A' + i),
 		}
 		starts = append(starts, start)
 	}
@@ -133,7 +127,6 @@ func main() {
 			adj:          start.adjByDist[0],
 			startingArea: &start.area,
 			dist:         0,
-			id:           start.id,
 		}
 	}
 	// this will be used to detect values that aren't infinitely increasing
@@ -164,27 +157,5 @@ func main() {
 			prevCounts[start.p] = start.area
 		}
 
-		/*
-			if i == 10 {
-				grid := map[point]rune{}
-
-				for x := 0; x < 10; x++ {
-					for y := 0; y < 10; y++ {
-						grid[point{x: x, y: y}] = '.'
-					}
-				}
-				for adj, f := range found {
-					grid[adj] = f.id
-				}
-
-				for y := 0; y < 10; y++ {
-					for x := 0; x < 10; x++ {
-						fmt.Printf("%s ", string(grid[point{x: x, y: y}]))
-					}
-					fmt.Println()
-				}
-				break
-			}
-		*/
 	}
 }
