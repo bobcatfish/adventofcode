@@ -3,79 +3,96 @@ package main
 import "fmt"
 
 const (
-	/*
-		numPlayers = 9
-		lastMarble = 25
-	*/
 	numPlayers = 486
-	lastMarble = 70833
-	//lastMarble = 70833 * 100
-	magic = 23
+	lastMarble = 70833 * 100
+	magic      = 23
 )
 
-func mod(a, b int) int {
-	v := a % b
-	if v < 0 {
-		return b + v
-	}
-	return v
+type marble struct {
+	id   int
+	next *marble
+	prev *marble
 }
 
-func placeMarble(marbles []int, currIndex, currMarble, currLen int) (int, []int, int, int) {
+func (m marble) String() string {
+	return fmt.Sprintf("[%d] next: %d, prev: %d", m.id, m.next.id, m.prev.id)
+}
+
+func placeMarble(currM *marble, m *marble, length int) (*marble, int, int) {
 	var score int
+	var curr *marble
 
-	if currMarble%magic == 0 {
-		score += currMarble
-		moveIndex := mod((currIndex - 7), currLen)
-		score += marbles[moveIndex]
-		copy(marbles[moveIndex:currLen], marbles[moveIndex+1:currLen])
-		currIndex = moveIndex
-		currLen--
+	if m.id%magic == 0 {
+		score += m.id
+
+		marbleToReplace := currM
+		for i := 0; i < 7; i++ {
+			marbleToReplace = marbleToReplace.prev
+		}
+
+		before := marbleToReplace.prev
+		after := marbleToReplace.next
+		score += marbleToReplace.id
+
+		before.next = after
+		after.prev = before
+
+		curr = after
+
+		length--
 	} else {
-		nextMarble := mod(currIndex+1, currLen)
+		after := currM.next
 
-		copy(marbles[nextMarble+2:], marbles[nextMarble+1:])
-		marbles[nextMarble+1] = currMarble
+		m.next = after.next
+		m.prev = after
 
-		currIndex = nextMarble + 1
-		currLen++
+		after.next.prev = m
+		after.next = m
+
+		curr = m
+		length++
 	}
-	return score, marbles, currIndex, currLen
+
+	return curr, score, length
 }
 
 func main() {
-	marbles := make([]int, lastMarble)
-	marbles[0] = 0
-	marbles[1] = 2
-	marbles[2] = 1
 
-	currLen := 3
-	currIndex := 1
+	next := &marble{
+		id: 1,
+	}
+	prev := &marble{
+		id: 0,
+	}
+	currMarble := &marble{
+		id:   2,
+		next: next,
+		prev: prev,
+	}
+	next.next = prev
+	next.prev = currMarble
+
+	prev.next = currMarble
+	prev.prev = next
+
 	currPlayer := 3
+
 	scores := map[int]int{}
 
 	for i := 0; i < numPlayers; i++ {
 		scores[i] = 0
 	}
 
-	for currMarble := 3; currMarble <= lastMarble; currMarble++ {
+	length := 3
+	for currMarbleVal := 3; currMarbleVal <= lastMarble; currMarbleVal++ {
 		var score int
-		score, marbles, currIndex, currLen = placeMarble(marbles, currIndex, currMarble, currLen)
+		marble := &marble{
+			id: currMarbleVal,
+		}
+		currMarble, score, length = placeMarble(currMarble, marble, length)
 		scores[currPlayer] += score
 
 		currPlayer = (currPlayer + 1) % numPlayers
-
-		/*
-			for i, m := range marbles {
-				if i == currIndex {
-					fmt.Printf("(%d) ", m)
-				} else {
-					fmt.Printf("%d ", m)
-				}
-			}
-			fmt.Println()
-			fmt.Println(scores)
-		*/
 	}
 
 	max := 0
