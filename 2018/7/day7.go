@@ -10,6 +10,11 @@ import (
 	"strings"
 )
 
+const (
+	numWorkers = 5
+	baseSec    = 60
+)
+
 type node struct {
 	id   string
 	prev []*node
@@ -25,6 +30,14 @@ func (d byID) Swap(i, j int)      { d[i], d[j] = d[j], d[i] }
 func getNext(s []*node) (*node, []*node) {
 	sort.Sort(byID(s))
 	return s[0], s[1:]
+}
+
+func getAllAvailable(s []*node, numWorkers int) ([]*node, []*node) {
+	sort.Sort(byID(s))
+	if len(s) > numWorkers {
+		return s[:numWorkers], s[numWorkers:]
+	}
+	return s, []*node{}
 }
 
 func canVisit(next *node, s []*node, visited map[string]bool) bool {
@@ -60,6 +73,85 @@ func traverse(s []*node, visited map[string]bool) []string {
 		order = append(order, next)
 	}
 	return order
+}
+
+func getReady(candidates []*node, inProgress map[rune]*node, finished map[rune]*node) (*node, []*node) {
+	for _, n := range finished {
+		for _, candidate := range n.next {
+			alreadyPresent := false
+			for _, c := range candidates {
+				if c.id == candidate.id {
+					alreadyPresent = true
+				}
+			}
+			_, alreadyFinished := finished[rune(candidate.id[0])]
+			_, currentlyUnderway := inProgress[rune(candidate.id[0])]
+
+			if !alreadyPresent && !alreadyFinished && !currentlyUnderway {
+				parentsFinished := true
+				for _, parent := range candidate.prev {
+					_, parentFinished := finished[rune(parent.id[0])]
+					if !parentFinished {
+						parentsFinished = false
+					}
+				}
+				if parentsFinished {
+					candidates = append(candidates, candidate)
+				}
+			}
+		}
+	}
+	if len(candidates) > 0 {
+		return getNext(candidates)
+	}
+	return nil, candidates
+}
+
+type work struct {
+	w    int
+	id   rune
+	node *node
+}
+
+func build(s []*node, totalLen int) int {
+	finished := map[rune]*node{}
+	inProgress := map[rune]*node{}
+	workers := make([]*work, numWorkers)
+
+	for i := 0; i < numWorkers; i++ {
+		workers[i] = &work{}
+	}
+
+	t := 1
+	for ; ; t++ {
+		for i, w := range workers {
+			if w.w > 0 {
+				w.w--
+			} else {
+				var next *node
+				next, s = getReady(s, inProgress, finished)
+				if next != nil {
+					inProgress[rune(next.id[0])] = next
+					workers[i] = &work{
+						w:    int(rune(next.id[0])-('A'-1)) + baseSec,
+						id:   rune(next.id[0]),
+						node: next,
+					}
+					// Count the current second as work
+					workers[i].w--
+				}
+			}
+		}
+		for _, w := range workers {
+			if w.w == 0 && w.node != nil {
+				finished[w.id] = w.node
+			}
+		}
+		if len(finished) == totalLen {
+			break
+		}
+	}
+	return t
 }
 
 func main() {
@@ -120,5 +212,8 @@ func main() {
 
 	visited := map[string]bool{}
 	order := traverse(roots, visited)
-	fmt.Println(strings.Join(order, ""))
+	fmt.Println("part 1", strings.Join(order, ""))
+
+	time := build(roots, len(order))
+	fmt.Println("part 2", time)
 }
