@@ -99,6 +99,7 @@ func main() {
 	start := 0
 	for i := 0; i < numGen; i++ {
 		state = mutate(state, spreads)
+		fmt.Println(state)
 		start -= 2
 	}
 
