@@ -72,7 +72,7 @@ func abs(x int) int {
 }
 
 func within(strongest *bot, b bot) bool {
-	dist := abs(strongest.p.x-b.p.x) + abs(strongest.p.y-b.p.y) + abs(strongest.p.z-b.p.z)
+	dist := manhattan(strongest.p, b.p)
 	return dist <= strongest.r
 }
 
@@ -86,6 +86,87 @@ func findBotsInRange(strongest *bot, bots []bot) []bot {
 	}
 
 	return rangeBots
+}
+
+func neighbors(p point) []point {
+	return []point{{
+		// above
+		x: p.x,
+		y: p.y - 1,
+		z: p.z,
+	}, {
+		// below
+		x: p.x,
+		y: p.y + 1,
+		z: p.z,
+	}, {
+		// left
+		x: p.x - 1,
+		y: p.y,
+		z: p.z,
+	}, {
+		// right
+		x: p.x + 1,
+		y: p.y,
+		z: p.z,
+	}, {
+		// in front
+		x: p.x,
+		y: p.y,
+		z: p.z + 1,
+	}, {
+		// behind
+		x: p.x,
+		y: p.y,
+		z: p.z - 1,
+	}}
+}
+
+func manhattan(p1, p2 point) int {
+	return abs(p1.x-p2.x) + abs(p1.y-p2.y) + abs(p1.z-p2.z)
+}
+
+func getPointsInRange(b bot) []point {
+	points := []point{}
+	currPoints := []point{b.p}
+	seen := map[point]bool{}
+
+	for {
+		//fmt.Println("RANGE", b.r, "SEEN", len(seen))
+		nextPoints := []point{}
+		for _, p := range currPoints {
+			n := neighbors(p)
+			for _, nn := range n {
+				if _, ok := seen[nn]; !ok {
+					if manhattan(nn, b.p) <= b.r {
+						nextPoints = append(nextPoints, nn)
+						points = append(points, nn)
+						seen[nn] = true
+					}
+				}
+			}
+		}
+		currPoints = nextPoints
+		if len(currPoints) == 0 {
+			break
+		}
+	}
+
+	return points
+}
+
+func getRangeCount(bots []bot) map[point]int {
+	rangeCount := map[point]int{}
+
+	for _, b := range bots {
+		fmt.Println("BOT", b.p)
+		points := getPointsInRange(b)
+		for _, p := range points {
+			c := rangeCount[p]
+			rangeCount[p] = c + 1
+		}
+	}
+	return rangeCount
 }
 
 func main() {
@@ -111,8 +192,19 @@ func main() {
 	}
 
 	strongest := findStrongest(bots)
-	fmt.Printf("Strongest bot (%d) at: %d,%d,%d\n", strongest.r, strongest.p.x, strongest.p.y, strongest.p.z)
-
 	within := findBotsInRange(strongest, bots)
-	fmt.Println(len(within))
+	fmt.Println("Bots within range of strongest bot:", len(within))
+
+	rangeCount := getRangeCount(bots)
+
+	maxC := 0
+	var maxP point
+	for p, count := range rangeCount {
+		if count > maxC {
+			maxC = count
+			maxP = p
+		}
+	}
+
+	fmt.Printf("point closest to all (to %d) is %d,%d,%d\n", maxC, maxP.x, maxP.y, maxP.z)
 }
