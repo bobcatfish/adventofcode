@@ -61,7 +61,7 @@ func neighbors(p *point) []point {
 	}}
 }
 
-func getBoard(vals []string) [][]*point {
+func getBoard(vals []string, elfAp int) [][]*point {
 	board := [][]*point{}
 	for y, v := range vals {
 		board = append(board, []*point{})
@@ -85,7 +85,7 @@ func getBoard(vals []string) [][]*point {
 				} else if vv == elfR {
 					p.u = &unit{
 						p:   p,
-						ap:  startingAp,
+						ap:  elfAp,
 						hp:  startingHp,
 						elf: true,
 					}
@@ -387,30 +387,27 @@ func printBoard(grid [][]*point) {
 	}
 }
 
-func main() {
-	file, err := os.Open("input.txt")
-	if err != nil {
-		log.Fatalf("Couldn't open file: %v", err)
+func countElves(grid [][]*point) int {
+	c := 0
+	for y := 0; y < len(grid); y++ {
+		for x := 0; x < len(grid[y]); x++ {
+			if grid[y][x].u != nil && grid[y][x].u.elf {
+				c++
+			}
+		}
 	}
-	defer file.Close()
+	return c
+}
 
-	vals := []string{}
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		vals = append(vals, scanner.Text())
-	}
-
-	grid := getBoard(vals)
-	printBoard(grid)
-
+func playOut(grid [][]*point) int {
 	round := 0
 	for {
 		round++
-		fmt.Println("ROUND", round)
+		//fmt.Println("ROUND", round)
 
 		if !numLeft(grid) {
 			round--
-			goto done
+			return round
 		}
 
 		moved := map[*unit]bool{}
@@ -422,8 +419,7 @@ func main() {
 					if u != nil {
 						if !numLeft(grid) {
 							round--
-							// I AM ASHAMED
-							goto done
+							return round
 						}
 						attacked := attackPhase(grid, u)
 						if attacked {
@@ -436,15 +432,42 @@ func main() {
 				}
 			}
 		}
-		printBoard(grid)
-
+		//printBoard(grid)
 		//time.Sleep(1000 * time.Millisecond)
 	}
-done:
-	fmt.Printf("%d rounds\n", round)
+}
 
-	hp := remaining(grid)
-	fmt.Printf("%d hp\n", hp)
+func main() {
+	for elfAp := startingAp + 1; ; elfAp++ {
+		file, err := os.Open("input.txt")
+		if err != nil {
+			log.Fatalf("Couldn't open file: %v", err)
+		}
+		defer file.Close()
 
-	fmt.Printf("answer: %d\n", hp*round)
+		vals := []string{}
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			vals = append(vals, scanner.Text())
+		}
+
+		fmt.Printf("*** ELF AP %d ***\n", elfAp)
+
+		grid := getBoard(vals, elfAp)
+		elfCount := countElves(grid)
+		//printBoard(grid)
+
+		round := playOut(grid)
+		fmt.Printf("%d rounds\n", round)
+
+		hp := remaining(grid)
+		fmt.Printf("%d hp\n", hp)
+		fmt.Printf("answer: %d\n", hp*round)
+		elfCountAfter := countElves(grid)
+
+		if elfCountAfter == elfCount {
+			fmt.Println("NO ELF DEATHS!")
+			break
+		}
+	}
 }
