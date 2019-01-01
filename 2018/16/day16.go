@@ -213,8 +213,58 @@ func registerEq(a, b []int) bool {
 	return true
 }
 
-func main() {
-	file, err := os.Open("input_1.txt")
+func countMatches(samples []sample) int {
+	multis := 0
+
+	for _, sample := range samples {
+		count := 0
+		for _, opc := range opcodes {
+			after, err := opc(sample.before, sample.input)
+			if err != nil {
+				continue
+			}
+			if registerEq(after, sample.after) {
+				count++
+			}
+		}
+		if count >= 3 {
+			multis++
+		}
+	}
+	return multis
+}
+
+func match(samples []sample, opIndices map[int]opcode, used map[int]struct{}) {
+	multis := 0
+
+	for _, sample := range samples {
+		count := 0
+		var lastMatch int
+		for i, opc := range opcodes {
+			if _, ok := used[i]; !ok {
+				after, err := opc(sample.before, sample.input)
+				if err != nil {
+					continue
+				}
+				if registerEq(after, sample.after) {
+					count++
+					lastMatch = i
+				}
+			}
+		}
+		//fmt.Println("count", count)
+		if count >= 3 {
+			multis++
+		}
+		if count == 1 {
+			opIndices[sample.input[0]] = opcodes[lastMatch]
+			used[lastMatch] = struct{}{}
+		}
+	}
+}
+
+func readFile(name string) []string {
+	file, err := os.Open(name)
 	if err != nil {
 		log.Fatalf("Couldn't open file: %v", err)
 	}
@@ -225,6 +275,11 @@ func main() {
 	for scanner.Scan() {
 		vals = append(vals, scanner.Text())
 	}
+	return vals
+}
+
+func main() {
+	vals := readFile("input_1.txt")
 
 	samples := []sample{}
 	for i := 0; i < len(vals); i += 4 {
@@ -248,25 +303,29 @@ func main() {
 		samples = append(samples, sample)
 	}
 
-	multis := 0
+	fmt.Println("total samples", len(samples))
+	multis := countMatches(samples)
+	fmt.Println("Part 1:", multis)
 
-	for _, sample := range samples {
-		count := 0
-		for _, opc := range opcodes {
-			after, err := opc(sample.before, sample.input)
-			if err != nil {
-				continue
-			}
-			if registerEq(after, sample.after) {
-				count++
-			}
+	opIndices := map[int]opcode{}
+	used := map[int]struct{}{}
+
+	match(samples, opIndices, used)
+	fmt.Println(opIndices)
+
+	instr := readFile("input_2.txt")
+	registers := []int{0, 0, 0, 0}
+
+	for _, v := range instr {
+		input, err := parseInput(strings.Split(v, " "))
+		if err != nil {
+			log.Fatalf("couldn't parse %s: %v", v, err)
 		}
-		fmt.Println("count", count)
-		if count >= 3 {
-			multis++
+		op := opIndices[input[0]]
+		registers, err = op(registers, input)
+		if err != nil {
+			log.Fatalf("error executing %s: %v", v, err)
 		}
 	}
-
-	fmt.Println("total samples", len(samples))
-	fmt.Println("total multis", multis)
+	fmt.Println("Part 2: ", registers[0])
 }
