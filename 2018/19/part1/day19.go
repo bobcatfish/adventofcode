@@ -232,6 +232,23 @@ type instruction struct {
 	input []int
 }
 
+func run(registers []int, instr []instruction, instrReg int) []int {
+	for {
+		next := registers[instrReg]
+		if next >= len(instr) || next < 0 {
+			break
+		}
+		todo := instr[next]
+		var err error
+		registers, err = opcodes[todo.op](registers, todo.input)
+		if err != nil {
+			log.Fatalf("error executing %d (reg: %v): %v", next, registers, err)
+		}
+		registers[instrReg]++
+	}
+	return registers
+}
+
 func main() {
 	vals := readFile("input.txt")
 	instrReg, err := getInstrReg(vals[0])
@@ -254,17 +271,6 @@ func main() {
 	}
 
 	registers := []int{0, 0, 0, 0, 0, 0}
-	for {
-		next := registers[instrReg]
-		if next >= len(instr) || next < 0 {
-			break
-		}
-		todo := instr[next]
-		registers, err = opcodes[todo.op](registers, todo.input)
-		if err != nil {
-			log.Fatalf("error executing %d (reg: %v): %v", next, registers, err)
-		}
-		registers[instrReg]++
-	}
-	fmt.Println(registers)
+	registers = run(registers, instr, instrReg)
+	fmt.Println("Part 1", registers)
 }
