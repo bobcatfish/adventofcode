@@ -5,6 +5,7 @@ My solutions for [adventofcode.com](http://adventofcode.com/)!
 * [2016 All Python all the time](./2016)
 * [2017 Go Go Go](./2017)
 * [2018 Go again](./2018)
+* [2019 Apparently all I know is Go now](./2019)
 
 ```
 
