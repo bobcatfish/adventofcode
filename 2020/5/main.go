@@ -8,31 +8,52 @@ import (
 	"sort"
 )
 
-func convert(s string) (Seat, error) {
-	ss := Seat{Pass: s}
+func getRow(s string) (int, error) {
+	vv := 0
 	for i, r := range s {
 		v := 0
-		if i > 6 {
-			switch r {
-			case 'L':
-			case 'R':
-				v = 1
-			default:
-				return ss, fmt.Errorf("unexpected rune %c for column", r)
-			}
-			shift := (3 - (i - 6))
-			ss.Column += v << uint(shift)
-		} else {
-			switch r {
-			case 'F':
-			case 'B':
-				v = 1
-			default:
-				return ss, fmt.Errorf("unexpected rune %c for row", r)
-			}
-			shift := 6 - i
-			ss.Row += v << uint(shift)
+		switch r {
+		case 'F':
+		case 'B':
+			v = 1
+		default:
+			return -1, fmt.Errorf("unexpected rune %c for row in %s", r, s)
 		}
+		shift := len(s) - 1 - i
+		vv += v << uint(shift)
+	}
+	return vv, nil
+}
+
+func getCol(s string) (int, error) {
+	vv := 0
+	for i, r := range s {
+		v := 0
+		switch r {
+		case 'L':
+		case 'R':
+			v = 1
+		default:
+			return -1, fmt.Errorf("unexpected rune %c for column in %s", r, s)
+		}
+		shift := len(s) - 1 - i
+		vv += v << uint(shift)
+	}
+	return vv, nil
+}
+
+func convert(s string) (Seat, error) {
+	ss := Seat{Pass: s}
+
+	row, col := s[:7], s[7:]
+	var err error
+	ss.Row, err = getRow(row)
+	if err != nil {
+		return ss, fmt.Errorf("couldn't convert row: %s", err)
+	}
+	ss.Column, err = getCol(col)
+	if err != nil {
+		return ss, fmt.Errorf("couldn't convert column: %s", err)
 	}
 	ss.Id = (ss.Row * 8) + ss.Column
 	return ss, nil
@@ -50,7 +71,7 @@ func load() ([]Seat, error) {
 	for scanner.Scan() {
 		val, err := convert(scanner.Text())
 		if err != nil {
-			return nil, fmt.Errorf("couldn't convert %s: %v", val, err)
+			return nil, fmt.Errorf("couldn't convert %v: %v", val, err)
 		}
 		vals = append(vals, val)
 	}
