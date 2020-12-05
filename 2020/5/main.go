@@ -8,6 +8,10 @@ import (
 	"sort"
 )
 
+const R = 'R'
+const L = 'L'
+const B = 'B'
+
 func getVal(s string, one rune) int {
 	vv := 0
 	for i, r := range s {
@@ -19,11 +23,21 @@ func getVal(s string, one rune) int {
 	return vv
 }
 
+func endOfRow(s string) int {
+	for i, r := range s {
+		if r == R || r == L {
+			return i
+		}
+	}
+	return -1
+}
+
 func convert(s string) (Seat, error) {
 	ss := Seat{Pass: s}
-	row, col := s[:7], s[7:]
-	ss.Row = getVal(row, 'B')
-	ss.Column = getVal(col, 'R')
+	e := endOfRow(s)
+	row, col := s[:e], s[e:]
+	ss.Row = getVal(row, B)
+	ss.Column = getVal(col, R)
 	ss.Id = (ss.Row * 8) + ss.Column
 	return ss, nil
 }
