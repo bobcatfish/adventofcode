@@ -8,53 +8,22 @@ import (
 	"sort"
 )
 
-func getRow(s string) (int, error) {
+func getVal(s string, one rune) int {
 	vv := 0
 	for i, r := range s {
-		v := 0
-		switch r {
-		case 'F':
-		case 'B':
-			v = 1
-		default:
-			return -1, fmt.Errorf("unexpected rune %c for row in %s", r, s)
+		if r == one {
+			shift := len(s) - 1 - i
+			vv += 1 << uint(shift)
 		}
-		shift := len(s) - 1 - i
-		vv += v << uint(shift)
 	}
-	return vv, nil
-}
-
-func getCol(s string) (int, error) {
-	vv := 0
-	for i, r := range s {
-		v := 0
-		switch r {
-		case 'L':
-		case 'R':
-			v = 1
-		default:
-			return -1, fmt.Errorf("unexpected rune %c for column in %s", r, s)
-		}
-		shift := len(s) - 1 - i
-		vv += v << uint(shift)
-	}
-	return vv, nil
+	return vv
 }
 
 func convert(s string) (Seat, error) {
 	ss := Seat{Pass: s}
-
 	row, col := s[:7], s[7:]
-	var err error
-	ss.Row, err = getRow(row)
-	if err != nil {
-		return ss, fmt.Errorf("couldn't convert row: %s", err)
-	}
-	ss.Column, err = getCol(col)
-	if err != nil {
-		return ss, fmt.Errorf("couldn't convert column: %s", err)
-	}
+	ss.Row = getVal(row, 'B')
+	ss.Column = getVal(col, 'R')
 	ss.Id = (ss.Row * 8) + ss.Column
 	return ss, nil
 }
