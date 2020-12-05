@@ -8,35 +8,44 @@ import (
 	"sort"
 )
 
-func convert(s string) (string, error) {
-	// oh dear i have go 1.9 and arch linux
-	// var b strings.Builder
-	ss := ""
-	for _, r := range s {
-		switch r {
-		case 'F':
-			ss += "0"
-		case 'B':
-			ss += "1"
-		case 'L':
-			ss += "0"
-		case 'R':
-			ss += "1"
-		default:
-			return "", fmt.Errorf("unexpected rune %c", r)
+func convert(s string) (Seat, error) {
+	ss := Seat{Pass: s}
+	for i, r := range s {
+		v := 0
+		if i > 6 {
+			switch r {
+			case 'L':
+			case 'R':
+				v = 1
+			default:
+				return ss, fmt.Errorf("unexpected rune %c for column", r)
+			}
+			shift := (3 - (i - 6))
+			ss.Column += v << uint(shift)
+		} else {
+			switch r {
+			case 'F':
+			case 'B':
+				v = 1
+			default:
+				return ss, fmt.Errorf("unexpected rune %c for row", r)
+			}
+			shift := 6 - i
+			ss.Row += v << uint(shift)
 		}
 	}
+	ss.Id = (ss.Row * 8) + ss.Column
 	return ss, nil
 }
 
-func load() ([]string, error) {
+func load() ([]Seat, error) {
 	file, err := os.Open("input.txt")
 	if err != nil {
 		return nil, fmt.Errorf("couldn't open file: %v", err)
 	}
 	defer file.Close()
 
-	vals := []string{}
+	vals := []Seat{}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		val, err := convert(scanner.Text())
@@ -55,37 +64,6 @@ type Seat struct {
 	Id     int
 }
 
-func lazyInt(r rune) int {
-	if r == '0' {
-		return 0
-	}
-	return 1
-}
-
-func getSeats(vals []string) []Seat {
-	seats := []Seat{}
-	for _, v := range vals {
-		row, column := 0, 0
-		for i, r := range v {
-			ri := lazyInt(r)
-			if i > 6 {
-				shift := (3 - (i - 6))
-				column += ri << uint(shift)
-			} else {
-				shift := 6 - i
-				row += ri << uint(shift)
-			}
-		}
-		seats = append(seats, Seat{
-			Pass:   v,
-			Row:    row,
-			Column: column,
-			Id:     (row * 8) + column,
-		})
-	}
-	return seats
-}
-
 func findGap(seats []Seat) (int, error) {
 	for i := 1; i < len(seats); i++ {
 		seat := seats[i]
@@ -102,11 +80,11 @@ func findGap(seats []Seat) (int, error) {
 }
 
 func main() {
-	vals, err := load()
+	seats, err := load()
 	if err != nil {
 		log.Fatalf("Couldn't load nums from file: %v", err)
 	}
-	seats := getSeats(vals)
+
 	sort.Slice(seats, func(i, j int) bool {
 		return seats[i].Id < seats[j].Id
 	})
