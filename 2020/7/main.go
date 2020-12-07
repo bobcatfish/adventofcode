@@ -57,27 +57,33 @@ func parse(v string) (string, map[string]int, error) {
 	return p, c, nil
 }
 
+type BagGraph map[string]*Bag
+
+func (bm BagGraph) Add(color string) *Bag {
+	b := &Bag{Color: color, Parents: []*Bag{}, Contents: map[*Bag]int{}}
+	bm[color] = b
+	return b
+}
+
+func (bm BagGraph) Get(color string) *Bag {
+	b, ok := bm[color]
+	if !ok {
+		return bm.Add(color)
+	}
+	return b
+}
+
 func getBags(vals []string) (map[string]*Bag, error) {
-	bm := map[string]*Bag{}
+	bm := BagGraph{}
 	for _, v := range vals {
 		p, c, err := parse(v)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't get bag from %q: %v", v, err)
 		}
 
-		var b *Bag
-		var ok bool
-		if b, ok = bm[p]; !ok {
-			b = &Bag{Color: p, Parents: []*Bag{}, Contents: map[*Bag]int{}}
-			bm[p] = b
-		}
-
+		b := bm.Get(p)
 		for cc, i := range c {
-			var cb *Bag
-			if cb, ok = bm[cc]; !ok {
-				cb = &Bag{Color: cc, Parents: []*Bag{}, Contents: map[*Bag]int{}}
-				bm[cc] = cb
-			}
+			cb := bm.Get(cc)
 			cb.Parents = append(cb.Parents, b)
 			b.Contents[cb] = i
 		}
