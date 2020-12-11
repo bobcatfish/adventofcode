@@ -67,8 +67,8 @@ func checkXYNeighbors(yi, y, xi, x int, s Seats) bool {
 	return false
 }
 
-func occupied1(c int) rune {
-	if c >= 4 {
+func occupied(max, c int) rune {
+	if c >= 5 {
 		return 'L'
 	}
 	return '#'
@@ -100,19 +100,11 @@ func checkXYVisible(yi, y, xi, x int, s Seats) bool {
 	return false
 }
 
-func occupied2(c int) rune {
-	if c >= 5 {
-		return 'L'
-	}
-	return '#'
-}
-
-type getNewSeat func(c int) rune
 type checkXY func(yi, y, xi, x int, s Seats) bool
 
 type Rules struct {
-	CheckXY  checkXY
-	Occupied getNewSeat
+	OccupiedMax int
+	CheckXY     checkXY
 }
 
 func (s Seats) Tick(r Rules) Seats {
@@ -123,7 +115,7 @@ func (s Seats) Tick(r Rules) Seats {
 			var n rune
 			if seat == '#' {
 				adj := CountAdj(y, x, s, r.CheckXY)
-				n = r.Occupied(adj)
+				n = occupied(r.OccupiedMax, adj)
 			} else if seat == 'L' {
 				adj := CountAdj(y, x, s, r.CheckXY)
 				n = empty(adj)
@@ -175,14 +167,14 @@ func main() {
 	}
 
 	s := findStable(seats, Rules{
-		CheckXY:  checkXYNeighbors,
-		Occupied: occupied1,
+		OccupiedMax: 4,
+		CheckXY:     checkXYNeighbors,
 	})
 	fmt.Println(s.Count())
 
 	s = findStable(seats, Rules{
-		CheckXY:  checkXYVisible,
-		Occupied: occupied2,
+		OccupiedMax: 5,
+		CheckXY:     checkXYVisible,
 	})
 	fmt.Println(s.Count())
 }
