@@ -41,7 +41,7 @@ func (s Seats) Equals(ss Seats) bool {
 	return true
 }
 
-func CountAdj1(y, x int, s Seats) int {
+func CountAdj(y, x int, s Seats, check checkXY) int {
 	c := 0
 	for yi := -1; yi <= 1; yi++ {
 		for xi := -1; xi <= 1; xi++ {
@@ -49,15 +49,22 @@ func CountAdj1(y, x int, s Seats) int {
 			if yi == 0 && xi == 0 {
 				continue
 			}
-			yy, xx := y+yi, x+xi
-			if yy >= 0 && xx >= 0 && yy < len(s) && xx < len(s[0]) {
-				if s[yy][xx] == '#' {
-					c++
-				}
+			if check(yi, y, xi, x, s) {
+				c++
 			}
 		}
 	}
 	return c
+}
+
+func checkXYNeighbors(yi, y, xi, x int, s Seats) bool {
+	yy, xx := y+yi, x+xi
+	if yy >= 0 && xx >= 0 && yy < len(s) && xx < len(s[0]) {
+		if s[yy][xx] == '#' {
+			return true
+		}
+	}
+	return false
 }
 
 func occupied1(c int) rune {
@@ -74,37 +81,23 @@ func empty(c int) rune {
 	return 'L'
 }
 
-func CountAdj2(y, x int, s Seats) int {
-	c := 0
-	for yi := -1; yi <= 1; yi++ {
-		for xi := -1; xi <= 1; xi++ {
-			// skip the seat itself
-			if yi == 0 && xi == 0 {
-				continue
-			}
-
-			sees := false
-			yy, xx := y+yi, x+xi
-			for {
-				if yy < 0 || xx < 0 || yy >= len(s) || xx >= len(s[0]) {
-					break
-				}
-				r := s[yy][xx]
-
-				if r == '#' {
-					sees = true
-				} else if r == 'L' {
-					break
-				}
-				yy += yi
-				xx += xi
-			}
-			if sees {
-				c++
-			}
+func checkXYVisible(yi, y, xi, x int, s Seats) bool {
+	yy, xx := y+yi, x+xi
+	for {
+		if yy < 0 || xx < 0 || yy >= len(s) || xx >= len(s[0]) {
+			break
 		}
+		r := s[yy][xx]
+
+		if r == '#' {
+			return true
+		} else if r == 'L' {
+			break
+		}
+		yy += yi
+		xx += xi
 	}
-	return c
+	return false
 }
 
 func occupied2(c int) rune {
@@ -115,12 +108,11 @@ func occupied2(c int) rune {
 }
 
 type getNewSeat func(c int) rune
-type countAdj func(x, y int, s Seats) int
+type checkXY func(yi, y, xi, x int, s Seats) bool
 
 type Rules struct {
-	CountAdj countAdj
+	CheckXY  checkXY
 	Occupied getNewSeat
-	Empty    getNewSeat
 }
 
 func (s Seats) Tick(r Rules) Seats {
@@ -130,11 +122,11 @@ func (s Seats) Tick(r Rules) Seats {
 		for x, seat := range row {
 			var n rune
 			if seat == '#' {
-				adj := r.CountAdj(y, x, s)
+				adj := CountAdj(y, x, s, r.CheckXY)
 				n = r.Occupied(adj)
 			} else if seat == 'L' {
-				adj := r.CountAdj(y, x, s)
-				n = r.Empty(adj)
+				adj := CountAdj(y, x, s, r.CheckXY)
+				n = empty(adj)
 			} else {
 				n = seat
 			}
@@ -183,16 +175,14 @@ func main() {
 	}
 
 	s := findStable(seats, Rules{
-		CountAdj: CountAdj1,
+		CheckXY:  checkXYNeighbors,
 		Occupied: occupied1,
-		Empty:    empty,
 	})
 	fmt.Println(s.Count())
 
 	s = findStable(seats, Rules{
-		CountAdj: CountAdj2,
+		CheckXY:  checkXYVisible,
 		Occupied: occupied2,
-		Empty:    empty,
 	})
 	fmt.Println(s.Count())
 }
