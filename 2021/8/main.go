@@ -37,7 +37,6 @@ func load() ([]entry, error) {
 		e := entry{
 			patterns: [][]rune{},
 			outputs:  [][]rune{},
-			mapping:  map[rune]rune{},
 		}
 
 		for i := 0; i < 10; i++ {
@@ -63,7 +62,6 @@ func load() ([]entry, error) {
 type entry struct {
 	patterns [][]rune
 	outputs  [][]rune
-	mapping  map[rune]rune
 }
 
 func (e *entry) countVals() int {
@@ -218,13 +216,13 @@ func main() {
 		count := e.countVals()
 		sum += count
 	}
+	fmt.Println(sum)
 
 	sum = 0
 	for _, e := range entries {
 		poss := e.getPoss()
 		m := getMap(poss)
 		ovals := e.getOutputVals(m)
-		fmt.Println(ovals)
 		sum += ovals
 	}
 	fmt.Println(sum)
