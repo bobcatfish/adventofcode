@@ -7,6 +7,7 @@ My solutions for [adventofcode.com](http://adventofcode.com/)!
 * [2018 Go again](./2018)
 * [2019 Apparently all I know is Go now](./2019)
 * [2020 Worst year or worstest year?](./2020)
+* [2021 Aka 2020 continued](./2021)
 
 ```
 
