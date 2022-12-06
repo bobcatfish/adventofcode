@@ -8,10 +8,10 @@ import (
 	"strconv"
 )
 
-func load() ([]int, error) {
+func load() []int {
 	file, err := os.Open("input.txt")
 	if err != nil {
-		return nil, fmt.Errorf("couldn't open file: %v", err)
+		log.Fatalf("couldn't open file: %v", err)
 	}
 	defer file.Close()
 
@@ -21,17 +21,14 @@ func load() ([]int, error) {
 		val := scanner.Text()
 		i, err := strconv.Atoi(val)
 		if err != nil {
-			return nil, err
+			log.Fatalf("couldn't convert int: %v", err)
 		}
 		vals = append(vals, i)
 	}
-	return vals, err
+	return vals
 }
 
 func main() {
-	vals, err := load()
-	if err != nil {
-		log.Fatalf("Couldn't load from file: %v", err)
-	}
-
+	vals := load()
+	fmt.Println(vals)
 }
