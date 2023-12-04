@@ -14,8 +14,19 @@ def eval_card(line):
     for v in vals:
         if v in wins:
             count += 1
+    return count
 
-    return int(math.pow(2, count-1))
+
+def do_card(vals, i, t):
+    count = 1
+
+    n = i+1
+    for ii in range(n, n+vals[i]):
+        if ii >= len(vals):
+            break
+        count += do_card(vals, ii, t + "\t")
+
+    return count
 
 
 if __name__ == "__main__":
@@ -23,5 +34,9 @@ if __name__ == "__main__":
         vals = []
         for line in f.readlines():
             vals.append(eval_card(line))
-        print(vals)
-        print(sum(vals))
+        print(sum([int(math.pow(2, count-1)) for count in vals]))
+
+    count = 0
+    for i in range(0, len(vals)):
+        count += do_card(vals, i, "")
+    print(count)
