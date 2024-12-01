@@ -27,6 +27,30 @@ def parse_map(lines):
     return nodes
 
 
+def step(curr, nodes, instr, steps):
+    d = instr[steps%len(instr)]
+    if d == 'L':
+        curr = curr.l
+    elif d == 'R':
+        curr = curr.r
+    else:
+        raise Exception("off the map {} {}".format(steps, d))
+    return curr
+
+
+def p1(nodes, instr):
+    curr = nodes["AAA"]
+
+    steps = 0
+
+    while curr.name != "ZZZ":
+        curr = step(curr, nodes, instr, steps)
+        steps += 1
+
+    print(steps)
+
+
+
 if __name__ == "__main__":
     with open("input.txt") as f:
         instr = f.readline().strip()
@@ -35,21 +59,5 @@ if __name__ == "__main__":
         lines = f.readlines()
         nodes = parse_map(lines)
 
-        curr = nodes["AAA"]
-
-        steps = 0
-
-        while curr.name != "ZZZ":
-            d = instr[steps%len(instr)]
-            if d == 'L':
-                curr = curr.l
-            elif d == 'R':
-                curr = curr.r
-            else:
-                raise Exception("off the map {} {}".format(steps, d))
-            steps += 1
-
-        print(steps)
-
-
+        p1(nodes, instr)
 
