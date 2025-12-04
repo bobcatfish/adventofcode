@@ -48,13 +48,7 @@ def num_rolls(loc, grid):
     return count
 
 
-if __name__ == "__main__":
-    grid = []
-    with open("input.txt") as f:
-        for line in f.readlines():
-            grid.append(line)
-
-
+def get_accessible(grid):
     accessible = []
     for y in range(0, len(grid)):
         for x in range (0, len(grid[0])):
@@ -64,6 +58,31 @@ if __name__ == "__main__":
                 if c < 4:
                     accessible.append(p)
 
-    print(len(accessible))
+    return accessible
+
+
+def remove(grid):
+    rolls = get_accessible(grid)
+    for loc in rolls:
+        grid[loc.y][loc.x] = '.'
+    return len(rolls)
+
+
+if __name__ == "__main__":
+    grid = []
+    with open("input.txt") as f:
+        for line in f.readlines():
+            grid.append(list(line))
+
+
+    count = 0
+    while True:
+        removed = remove(grid)
+        print("Removed: ", removed)
+        if removed == 0:
+            break
+        count += removed
+
+    print("Total ", count)
 
 
